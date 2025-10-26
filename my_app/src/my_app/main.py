@@ -1,8 +1,7 @@
-import os
-
-from my_app.utils import download_file, get_file_path, count_sum_avg, count_dash_indices
+from my_app.utils import download_file, get_file_path, count_sum_avg, count_dash_indices, log_time
 
 
+@log_time
 def download_transform_file(url: str, file_name: str = 'latest.csv') -> None:
     file_path = get_file_path(file_name)
     download_file(url, file_path)

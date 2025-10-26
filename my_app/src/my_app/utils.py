@@ -1,5 +1,7 @@
 import logging
 import os
+from datetime import datetime
+from functools import wraps
 
 import requests
 
@@ -54,3 +56,37 @@ def count_sum_avg(line: list) -> Generator[tuple[float, float], None, None]:
 
 def count_dash_indices(line: list) -> Generator[list[int], None, None]:
     yield [i - 1 for i, val in enumerate(line) if i > 0 and val == '-']
+
+
+def wrap_time(prefix):
+    def decorator(func):
+        @wraps(func)
+        def wrapper():
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'[{prefix}] {current_time}')
+            return func
+
+        return wrapper
+
+    return decorator
+
+
+@wrap_time('START')
+def start_log():
+    pass
+
+
+@wrap_time('END')
+def end_log():
+    pass
+
+
+def log_time(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_log()
+        result = func(*args, **kwargs)
+        end_log()
+        return result
+
+    return wrapper

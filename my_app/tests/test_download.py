@@ -13,7 +13,7 @@ def test_download_file_creates_file():
     if os.path.exists(test_filename):
         os.remove(file_path)
 
-    download_file(test_url)
+    download_file(test_url, file_path)
 
     assert os.path.exists(test_filename)
 
