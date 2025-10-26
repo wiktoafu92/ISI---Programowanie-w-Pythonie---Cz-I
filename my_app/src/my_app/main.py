@@ -1,47 +1,29 @@
-import logging
 import os
 
-import requests
-
-from my_app.exceptions import HTTPError, NotFoundError, AccessDeniedError
+from my_app.utils import download_file, get_file_path, count_sum_avg, count_dash_indices
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s'
-)
+def download_transform_file(url: str, file_name: str = 'latest.csv') -> None:
+    file_path = get_file_path(file_name)
+    download_file(url, file_path)
 
+    with open(file_path, 'r') as file:
+        content = file.read()
 
-def fetch_data(url: str) -> requests.Response:
-    response = requests.get(url)
+    lines = content.strip().splitlines()
 
-    if response.status_code == 404:
-        raise NotFoundError()
-    elif response.status_code == 403:
-        raise AccessDeniedError()
-    elif response.status_code >= 400:
-        raise HTTPError(response.status_code)
+    with (open(get_file_path('values.csv'), 'w') as f1, open(get_file_path('missing_values.csv'), 'w') as f2):
+        for line in lines:
+            row = line.split(',')
 
-    return response
+            total, avg = next(count_sum_avg(row))
+            f1.write(f'{row[0]}, {total}, {avg}\n')
 
-
-def download_file(url: str, filename: str = 'latest.csv') -> None:
-    try:
-        response = fetch_data(url)
-
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-        file_path = os.path.join(project_root, filename)
-
-        with open(file_path, 'wb') as file:
-            file.write(response.content)
-
-        logging.info(f'Plik został zapisany jako: {filename}')
-
-    except (NotFoundError, AccessDeniedError, HTTPError) as e:
-        logging.error(f'Błąd HTTP: {e}')
+            missing = next(count_dash_indices(row))
+            f2.write(f'{row[0]}, {', '.join(map(str, missing))}\n')
 
 
 if __name__ == '__main__':
-    download_file(
+    download_transform_file(
         'https://oleksandr-fedoruk.com/wp-content/uploads/2025/10/sample.csv'
     )
